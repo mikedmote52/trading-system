@@ -26,6 +26,7 @@ import signal
 import sys
 import os
 from decimal import Decimal, ROUND_HALF_UP
+from screener import SqueezeScanner
 
 # High-performance async Flask setup
 app = Flask(__name__)
@@ -797,4 +798,12 @@ async def scan_for_squeezes():
                     "data": data
                 })
         return opportunities
+
+@app.route("/scan", methods=["GET"])
+def run_squeeze_scan():
+    try:
+        results = scanner.scan()
+        return jsonify({"success": True, "candidates": results})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
 
