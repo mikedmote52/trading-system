@@ -767,3 +767,34 @@ class OptimizedTradingExecutor:
         account_data = await self._get_account_data_cached()
         if account_data['buying_power'] < position_value:
             return False, f"Insufficient buying power: ${account_data['buying_power']:.0f} < ${position_value:.
+async def fetch_squeeze_data(session, symbol):
+    url = f"https://api.yourdatafeed.com/squeeze/{symbol}"  # replace with real endpoint
+    try:
+        async with session.get(url) as response:
+            return await response.json()
+    except Exception as e:
+        logging.error(f"Failed to fetch {symbol}: {e}")
+        return None
+
+async def score_opportunity(data):
+    # Replace this with your scoring model logic
+    return data.get("score", 0)
+
+async def scan_for_squeezes():
+    stocks_to_scan = ["GME", "TSLA", "AMC", "NVDA", "BMBL"]  # Replace with your own list
+    async with aiohttp.ClientSession() as session:
+        tasks = [fetch_squeeze_data(session, symbol) for symbol in stocks_to_scan]
+        results = await asyncio.gather(*tasks)
+        opportunities = []
+        for symbol, data in zip(stocks_to_scan, results):
+            if data is None:
+                continue
+            score = await score_opportunity(data)
+            if score >= TRADING_CONFIG["min_score_threshold"]:
+                opportunities.append({
+                    "symbol": symbol,
+                    "score": score,
+                    "data": data
+                })
+        return opportunities
+
