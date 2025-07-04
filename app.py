@@ -791,7 +791,9 @@ async def scan_for_squeezes():
             if data is None:
                 continue
             score = await score_opportunity(data)
-            if score >= TRADING_CONFIG["min_score_threshold"]:
+            if 
+score >= TRADING_CONFIG["min_score_threshold"]:
+send_slack_alert(f"🔥 Squeeze candidate: {symbol} | Score: {score}")
                 opportunities.append({
                     "symbol": symbol,
                     "score": score,
@@ -806,4 +808,16 @@ def run_squeeze_scan():
         return jsonify({"success": True, "candidates": results})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
+
+import requests  # Make sure this is at the top if not already
+
+SLACK_WEBHOOK_URL = "https://hooks.slack.com/services/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"
+
+def send_slack_alert(message: str):
+    payload = {"text": message}
+    try:
+        response = requests.post(SLACK_WEBHOOK_URL, json=payload)
+        response.raise_for_status()
+    except Exception as e:
+        print(f"Slack alert failed: {e}")
 
